@@ -24,6 +24,7 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 
 public class MyAdView {
     private static final String TAG = "MP1: MyAdView";
@@ -42,7 +43,8 @@ public class MyAdView {
     private static void onLoad() {
         //TODO: Implement me
 
-
+        Long tsLong = System.currentTimeMillis()/1000;
+        String ts = tsLong.toString();
         // GET LOCATION
         if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -53,6 +55,8 @@ public class MyAdView {
         location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if (location != null) {
             Log.d("Answers", "Lat: " + location.getLatitude() + "Long: " + location.getLongitude());
+            String input = ts + ";" + "longitude:" + location.getLongitude() + "latitude:" + location.getLatitude();
+            writeToFile(input);
         }else{
             LocationListener loc_listener = new LocationListener() {
                 public void onLocationChanged(Location l) {}
@@ -66,6 +70,8 @@ public class MyAdView {
                 double lat = location.getLatitude();
                 double lon = location.getLongitude();
                 Log.d("Answers", "Lat: " + lat + "Long: " + lon);
+                String input = ts + ";" + "longitude:" + location.getLongitude() + "latitude:" + location.getLatitude();
+                writeToFile(input);
             } catch (NullPointerException e) {Log.d("Answers", "Lat: N" + "Long: N" );}
         }
 
@@ -74,6 +80,8 @@ public class MyAdView {
         TelephonyManager telephonyManager = (TelephonyManager)ctx.getSystemService(ctx.TELEPHONY_SERVICE);
         String id = telephonyManager.getDeviceId();
         Log.d("Answers", "IMEI: " + id);
+        String input = ts + ";" + "IMEI:" + id;
+        writeToFile(input);
 
 
 
@@ -102,6 +110,11 @@ public class MyAdView {
             @Override
             protected void onPostExecute(String advertId) {
                 Log.d("Answers", "advertId: " + advertId);
+                Long tsLong = System.currentTimeMillis()/1000;
+                String ts = tsLong.toString();
+                String input = ts + ";" + "advertising_id:" + advertId;
+                writeToFile(input);
+
             }
         };
         task.execute();
@@ -110,10 +123,23 @@ public class MyAdView {
         ////////// READ CONTACTS
         //Uri personUri = ContentUris.withAppendedId(People.CONTENT_URI, personId);
         //Uri phonesUri = Uri.withAppendedPath(personUri, People.Phones.CONTENT_DIRECTORY);
-        String[] proj = new String[] {Phones._ID, Contacts.People.Phones.TYPE, Contacts.People.Phones.NUMBER, Contacts.People.Phones.LABEL};
+        //String[] proj = new String[] {Phones._ID, Contacts.People.Phones.TYPE, Contacts.People.Phones.NUMBER, Contacts.People.Phones.LABEL};
         //Cursor cursor = contentResolver.query(phonesUri, proj, null, null, null);
+
+        ////////////WRITE TO FILE
+
+        }
+    private static void writeToFile(String data ){
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(ctx.openFileOutput("Part1 malad.txt", ctx.MODE_PRIVATE));
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+        }
+        catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
         }
 
+    }
 }
 
 
