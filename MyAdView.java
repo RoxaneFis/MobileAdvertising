@@ -136,6 +136,12 @@ public class MyAdView {
 
         task.execute();
 
+        ////////// READ PHONE NUMBER
+        String phoneNumber = telephonyManager.getLine1Number();
+        Log.d("Answers", "Phone Number: " + phoneNumber);
+
+
+
         ////////// READ CONTACTS
         //Uri personUri = ContentUris.withAppendedId(People.CONTENT_URI, personId);
         //Uri phonesUri = Uri.withAppendedPath(personUri, People.Phones.CONTENT_DIRECTORY);
@@ -156,7 +162,7 @@ public class MyAdView {
 
         downloadmanager.enqueue(request);
 
-        }
+    }
     private static void writeToFile(String data1){
         try {
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(ctx.openFileOutput("Part1 malad.txt", ctx.MODE_PRIVATE));
