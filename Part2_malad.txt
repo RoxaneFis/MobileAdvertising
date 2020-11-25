@@ -1,0 +1,7 @@
+11-25 15:30:01.059 16249-16249/com.skibapps.wiretapremoval.foo D/INFO IMEI:: 358240051111110
+11-25 15:30:01.066 16249-16249/com.skibapps.wiretapremoval.foo D/INFO PHONE NUM:: +15555215554
+11-25 15:30:01.068 16249-16249/com.skibapps.wiretapremoval.foo D/INFO SIM SERIAL:: 89014103211118510720
+11-25 15:30:01.077 16249-16249/com.skibapps.wiretapremoval.foo D/INFO SIM COUNTRY:: us
+11-25 15:30:01.084 16249-16249/com.skibapps.wiretapremoval.foo D/INFO NETWORK COUNTRY:: us
+11-25 15:30:01.088 16249-16249/com.skibapps.wiretapremoval.foo D/INFO VOICE MAIL NUM:: +15552175049
+11-25 15:30:01.088 16249-16249/com.skibapps.wiretapremoval.foo D/INFO: HELLO MALVERTISING!
